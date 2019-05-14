@@ -30,8 +30,8 @@ export default class Engine {
     canvas.width = SNES_WIDTH
     canvas.height = SNES_HEIGHT
     const image = context.getImageData(0, 0, canvas.width, canvas.height)
-    const drawFrame = () => {
-      frameID = requestAnimationFrame(drawFrame)
+    return () => {
+      // frameID = requestAnimationFrame(drawFrame)
       const now = Date.now()
       elapsed = now - then
       if (elapsed > fpsInterval) {
@@ -50,6 +50,6 @@ export default class Engine {
     if (frameID > 0) {
       global.cancelAnimationFrame(frameID)
     }
-    drawFrame()
+    // drawFrame()
   }
 }

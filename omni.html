@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<title>Earthbound Background</title>
+</head>
+
+<body>
+	<div id="master">
+		<canvas id="a"></canvas>
+		<canvas id="b"></canvas>
+	</div><!-- /#master -->
+
+	<script src="/dist/index.js"></script>
+	
+
+	<script>
+		var backgrounds = [];
+
+		backgrounds.push(new Background({
+			canvasid: 'a',
+			fps: 15,
+		}));
+
+		backgrounds.push(new Background({
+			canvasid: 'b',
+			layer1: 222,
+			fps: 60,
+		}));
+
+		RunAllBackgrounds(backgrounds);
+	</script>
+</body>
+</html>

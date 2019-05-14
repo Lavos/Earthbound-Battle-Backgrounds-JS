@@ -3,9 +3,63 @@ import data from "../data/truncated_backgrounds.dat";
 import Engine from "./engine";
 import BackgroundLayer from "./rom/background_layer";
 const backgroundData = new Uint8Array(Array.from(data).map(x => x.charCodeAt(0)));
+const ROM = new Rom(backgroundData);
 
-export const ROM = new Rom(backgroundData)
+var defaults = {
+	canvasid: null,
+	debug: false,
+	fps: 30,
+	frameSkip: 1,
+	aspectRatio: 16,
+	layer1: 270,
+	layer2: 269,
+};
 
+export class Background {
+	constructor (options) {
+		this.options = Object.assign({}, defaults, options);
+
+		this.layer1 = new BackgroundLayer(this.options.layer1, ROM)
+		this.layer2 = new BackgroundLayer(this.options.layer2, ROM)
+
+		if (this.options.canvasid) {
+			// Create animation engine
+			this.engine = new Engine([this.layer1, this.layer2], {
+				fps: this.options.fps,
+				aspectRatio: this.options.aspectRatio,
+				frameSkip: this.options.frameSkip,
+				alpha: [0.5, 0.5],
+				canvas: document.getElementById(this.options.canvasid)
+			})
+		};
+
+		backgrounds.push(this);
+	}
+
+	animate () {
+		return this.engine.animate(this.options.debug);
+	}
+}
+
+export function RunAllBackgrounds(backgrounds) {
+	var fs = [];
+
+	for (var x = 0, n = backgrounds.length; x < n; x++) {
+		fs.push(backgrounds[x].animate());
+	};
+
+	var f = function () {
+		window.requestAnimationFrame(f);
+
+		for (var x = 0, n = fs.length; x < n; x++) {
+			fs[x]();
+		};
+	};
+
+	window.requestAnimationFrame(f);
+}
+
+/*
 var setupEngine = exports.setupEngine = function setupEngine() {
   let params = getJsonFromUrl()
   let loader = null
@@ -44,3 +98,5 @@ var setupEngine = exports.setupEngine = function setupEngine() {
 }
 
 setupEngine();
+
+*/
