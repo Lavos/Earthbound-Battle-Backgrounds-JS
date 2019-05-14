@@ -16,10 +16,10 @@ var defaults = {
 
 export class BackgroundManager {
 	constructor (backgroundOptions) {
-		this.options = backgroundOptions;
+		this.options = Object.assign({}, defaults, backgroundOptions);
 		this.current = null;
-		this.a = new Background(backgroundOptions);
-		this.b = new Background(backgroundOptions);
+		this.a = new Background(this.options);
+		this.b = new Background(this.options);
 
 		this.timer = null;
 
@@ -81,7 +81,7 @@ function getRandomInt (min, max) {
 
 class Background {
 	constructor (options) {
-		this.options = Object.assign({}, defaults, options);
+		this.options = options;
 		this.element = document.createElement('canvas');
 		this.animate = false;
 	}
