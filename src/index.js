@@ -6,57 +6,119 @@ const backgroundData = new Uint8Array(Array.from(data).map(x => x.charCodeAt(0))
 const ROM = new Rom(backgroundData);
 
 var defaults = {
-	canvasid: null,
+	element: null,
 	debug: false,
-	fps: 30,
+	fps: 60,
 	frameSkip: 1,
-	aspectRatio: 16,
-	layer1: 270,
-	layer2: 269,
+	aspectRatio: 0,
+	timeoutMS: 15000,
 };
 
-export class Background {
-	constructor (options) {
-		this.options = Object.assign({}, defaults, options);
+export class BackgroundManager {
+	constructor (backgroundOptions) {
+		this.options = backgroundOptions;
+		this.current = null;
+		this.a = new Background(backgroundOptions);
+		this.b = new Background(backgroundOptions);
 
-		this.layer1 = new BackgroundLayer(this.options.layer1, ROM)
-		this.layer2 = new BackgroundLayer(this.options.layer2, ROM)
+		this.timer = null;
 
-		if (this.options.canvasid) {
-			// Create animation engine
-			this.engine = new Engine([this.layer1, this.layer2], {
-				fps: this.options.fps,
-				aspectRatio: this.options.aspectRatio,
-				frameSkip: this.options.frameSkip,
-				alpha: [0.5, 0.5],
-				canvas: document.getElementById(this.options.canvasid)
-			})
-		};
+		this.element = backgroundOptions.element;
+		this.element.appendChild(this.a.element);
+		this.element.appendChild(this.b.element);
 
-		backgrounds.push(this);
+		document.addEventListener('keyup', this.handleKeypress.bind(this));
 	}
 
-	animate () {
-		return this.engine.animate(this.options.debug);
+	change () {
+		if (this.current) {
+			this.current.transitionOut();
+		};
+
+		if (this.a === this.current) {
+			this.current = this.b;
+		} else {
+			this.current = this.a;
+		};
+
+		this.current.start();
+	}
+
+	run () {
+		if (this.timer) {
+			clearInterval(this.timer);
+		};
+
+		this.change();
+		window.requestAnimationFrame(this.handleFrame.bind(this));
+		this.timer = setInterval(this.change.bind(this), this.options.timeoutMS);
+	}
+
+	handleKeypress (event) {
+		switch (event.which) {
+		case 32:
+			this.run();
+		break;
+		}
+	}
+
+	handleFrame () {
+		window.requestAnimationFrame(this.handleFrame.bind(this));
+
+		if (this.a.animate) {
+			this.a.frameCallback();
+		};
+
+		if (this.b.animate) {
+			this.b.frameCallback();
+		};
 	}
 }
 
-export function RunAllBackgrounds(backgrounds) {
-	var fs = [];
+function getRandomInt (min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
-	for (var x = 0, n = backgrounds.length; x < n; x++) {
-		fs.push(backgrounds[x].animate());
-	};
+class Background {
+	constructor (options) {
+		this.options = Object.assign({}, defaults, options);
+		this.element = document.createElement('canvas');
+		this.animate = false;
+	}
 
-	var f = function () {
-		window.requestAnimationFrame(f);
+	initEngine () {
+		this.layer1 = new BackgroundLayer(getRandomInt(0, 326), ROM);
+		this.layer2 = new BackgroundLayer(getRandomInt(0, 326), ROM);
 
-		for (var x = 0, n = fs.length; x < n; x++) {
-			fs[x]();
-		};
-	};
+		// Create animation engine
+		this.engine = new Engine([this.layer1, this.layer2], {
+			fps: this.options.fps,
+			aspectRatio: this.options.aspectRatio,
+			frameSkip: this.options.frameSkip,
+			alpha: [0.5, 0.5],
+			canvas: this.element,
+		});
 
-	window.requestAnimationFrame(f);
+		this.frameCallback = this.engine.animate(this.options.debug);
+	}
+
+	transitionOut () {
+		this.element.classList.toggle('visible', false);
+
+		setTimeout(() => {
+			this.setAnimate(false);
+		}, 2100);
+	}
+
+	start () {
+		this.element.classList.toggle('visible', true);
+		this.setAnimate(true);
+		this.initEngine();
+	}
+
+	setAnimate (animate) {
+		this.animate = animate;
+	}
 }
 
 /*
